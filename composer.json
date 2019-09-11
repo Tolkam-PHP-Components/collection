@@ -1,0 +1,14 @@
+{
+  "name": "tolkam/collection",
+  "description": "Typed list of elements",
+  "type": "library",
+  "license": "proprietary",
+  "autoload": {
+    "psr-4": {
+      "Tolkam\\Collection\\": "src"
+    }
+  },
+  "require": {
+    "php": ">=7.2.0"
+  }
+}
