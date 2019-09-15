@@ -13,3 +13,7 @@
 # Composer
 vendor/*
 !vendor/.gitkeep
+
+# phpunit
+phpunit.xml
+!phpunit.xml.dist

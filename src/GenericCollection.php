@@ -7,7 +7,7 @@ class GenericCollection extends AbstractCollection
     /**
      * @inheritDoc
      */
-    public static function getType(): ?string
+    public static function getItemType(): ?string
     {
         return null;
     }

@@ -9,6 +9,11 @@ use RuntimeException;
 abstract class AbstractCollection implements CollectionInterface
 {
     /**
+     * @var int
+     */
+    protected $itemsCount = 0;
+    
+    /**
      * @var array
      */
     protected $items = [];
@@ -17,6 +22,34 @@ abstract class AbstractCollection implements CollectionInterface
      * @var array
      */
     protected $indexes = [];
+    
+    /**
+     * @inheritDoc
+     */
+    public function add($item, array $indexes = []): void
+    {
+        // check item type
+        $type = static::getItemType();
+        if ($type !== null && !$this->isTypeValid($item, $type)) {
+            throw new InvalidArgumentException(sprintf(
+                'Collection item must be of type %s, %s given',
+                $type,
+                gettype($item)
+            ));
+        }
+        
+        // add item
+        $this->items[] = $item;
+        
+        // add indexes
+        $position = $this->count() - 1;
+        foreach ($indexes as $k => $v) {
+            $this->addIndex($k, $v, $position);
+        }
+    
+        // update count
+        $this->itemsCount++;
+    }
     
     /**
      * Gets the allowed items type
@@ -28,25 +61,10 @@ abstract class AbstractCollection implements CollectionInterface
     /**
      * @inheritDoc
      */
-    public function add($item, array $indexes = []): void
+    public function count(): int
     {
-        // check item type
-        $type = static::getItemType();
-        if ($type && !$this->isTypeValid($item, $type)) {
-            throw new InvalidArgumentException(sprintf(
-                'Collection item must be of type %s, %s given',
-                $type,
-                gettype($item)
-            ));
-        }
-    
-        // add item
-        $this->items[] = $item;
-        
-        // add indexes
-        foreach ($indexes as $k => $v) {
-            $this->addIndex($k, $v, $this->count() - 1);
-        }
+        // return count($this->items);
+        return $this->itemsCount;
     }
     
     /**
@@ -57,7 +75,8 @@ abstract class AbstractCollection implements CollectionInterface
         foreach ($this->items as $offset => $value) {
             if ($item === $value) {
                 unset($this->items[$offset]);
-                $this->removeIndexes($offset);
+                $this->itemsCount--;
+                $this->removeIndices($offset);
                 return true;
             }
         }
@@ -70,19 +89,17 @@ abstract class AbstractCollection implements CollectionInterface
      */
     public function getBy(string $indexName, $indexValue, $default = null)
     {
-        $invalidValueMessage = 'Index value must be string or array of strings';
         $indexes = $this->indexes[$indexName] ?? null;
         
         if (empty($indexes)) {
             return $default;
         }
-    
+        
         // array of index values
         if (is_array($indexValue)) {
-            
             // search unique values only
             $indexValue = array_unique($indexValue, SORT_REGULAR);
-    
+            
             $items = [];
             foreach ($indexValue as $value) {
                 $this->assertIndexValueValid($value);
@@ -92,9 +109,9 @@ abstract class AbstractCollection implements CollectionInterface
             }
             
             return $items;
-
+            
         // single index value
-        } elseif (is_string($indexValue)) {
+        } else if (is_string($indexValue)) {
             return $this->items[$indexes[$indexValue] ?? null] ?? null;
         }
         
@@ -170,6 +187,7 @@ abstract class AbstractCollection implements CollectionInterface
      */
     public function clear(): void
     {
+        $this->itemsCount = 0;
         $this->items = [];
         $this->indexes = [];
     }
@@ -185,9 +203,9 @@ abstract class AbstractCollection implements CollectionInterface
     /**
      * @inheritDoc
      */
-    public function count(): int
+    public function jsonSerialize()
     {
-        return count($this->items);
+        return $this->toArray();
     }
     
     /**
@@ -196,53 +214,6 @@ abstract class AbstractCollection implements CollectionInterface
     public function toArray(): array
     {
         return array_values($this->items);
-    }
-    
-    /**
-     * @inheritDoc
-     */
-    public function jsonSerialize()
-    {
-        return $this->toArray();
-    }
-    
-    /**
-     * Adds index for item position
-     *
-     * @param string $key
-     * @param        $value
-     * @param        $position
-     */
-    protected function addIndex(string $key, $value, $position)
-    {
-        $this->assertIndexValueValid($value);
-        
-        if (isset($this->indexes[$key][$value])) {
-            throw new RuntimeException(sprintf('Index "%s:%s" is already exists', $key, $value));
-        }
-        
-        $this->indexes[$key][$value] = $position;
-    }
-    
-    /**
-     * Removes item indexes by item position
-     *
-     * @param int $itemOffset
-     */
-    protected function removeIndexes(int $itemOffset)
-    {
-        foreach ($this->indexes as $k => $v) {
-            foreach ($v as $kk => $vv) {
-                if ($vv !== $itemOffset) {
-                    continue;
-                }
-                
-                unset($this->indexes[$k][$kk]);
-                if (empty($this->indexes[$k])) {
-                    unset($this->indexes[$k]);
-                }
-            }
-        }
     }
     
     /**
@@ -262,13 +233,52 @@ abstract class AbstractCollection implements CollectionInterface
         
         if (function_exists($isFunction) && $isFunction($item)) {
             return true;
-        } elseif (function_exists($cTypeFunction) && $cTypeFunction($item)) {
+        } else if (function_exists($cTypeFunction) && $cTypeFunction($item)) {
             return true;
-        } elseif ($item instanceof $type) {
+        } else if ($item instanceof $type) {
             return true;
         }
         
         return false;
+    }
+    
+    /**
+     * Adds index for item position
+     *
+     * @param string $key
+     * @param        $value
+     * @param        $position
+     */
+    protected function addIndex(string $key, $value, $position)
+    {
+        $this->assertIndexValueValid($value);
+        
+        if (isset($this->indexes[$key][$value])) {
+            throw new RuntimeException(sprintf('Index "%s:%s" is already exists', $key, $value));
+        }
+    
+        $this->indexes[$key][$value] = $position;
+    }
+    
+    /**
+     * Removes item indexes by item position
+     *
+     * @param int $itemOffset
+     */
+    protected function removeIndices(int $itemOffset)
+    {
+        foreach ($this->indexes as $k => $v) {
+            foreach ($v as $kk => $vv) {
+                if ($vv !== $itemOffset) {
+                    continue;
+                }
+                
+                unset($this->indexes[$k][$kk]);
+                if (empty($this->indexes[$k])) {
+                    unset($this->indexes[$k]);
+                }
+            }
+        }
     }
     
     /**

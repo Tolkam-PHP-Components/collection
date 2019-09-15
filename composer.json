@@ -1,14 +1,24 @@
 {
-  "name": "tolkam/collection",
-  "description": "Typed list of elements",
-  "type": "library",
-  "license": "proprietary",
-  "autoload": {
-    "psr-4": {
-      "Tolkam\\Collection\\": "src"
+    "name": "tolkam/collection",
+    "description": "Typed list of elements",
+    "type": "library",
+    "license": "proprietary",
+    "autoload": {
+        "psr-4": {
+            "Tolkam\\Collection\\": "src"
+        }
+    },
+    "require": {
+        "php": ">=7.2.0",
+        "ext-json": "*",
+        "ext-mbstring": "*"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "8.3.5"
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-master": "1.0-dev"
+        }
     }
-  },
-  "require": {
-    "php": ">=7.2.0"
-  }
 }
