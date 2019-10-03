@@ -42,7 +42,8 @@ abstract class AbstractCollection implements CollectionInterface
         $this->items[] = $item;
         
         // add indexes
-        $position = $this->count() - 1;
+        $itemsCount = $this->count();
+        $position = $itemsCount ? $itemsCount - 1 : $itemsCount;
         foreach ($indexes as $k => $v) {
             $this->addIndex($k, $v, $position);
         }
