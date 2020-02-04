@@ -1,6 +1,6 @@
 {
     "name": "tolkam/collection",
-    "description": "Typed list of elements",
+    "description": "Wrappers for iterable data",
     "type": "library",
     "license": "proprietary",
     "autoload": {
@@ -12,9 +12,6 @@
         "php": ">=7.2.0",
         "ext-json": "*",
         "ext-mbstring": "*"
-    },
-    "require-dev": {
-        "phpunit/phpunit": "8.3.5"
     },
     "extra": {
         "branch-alias": {
