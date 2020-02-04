@@ -103,7 +103,7 @@ class LazyCollection implements IteratorAggregate
      *
      * @param callable $callback Return false to stop
      *
-     * @return $this
+     * @return static
      */
     public function each(callable $callback)
     {
@@ -195,7 +195,7 @@ class LazyCollection implements IteratorAggregate
     /**
      * Gets item keys
      *
-     * @return LazyCollection
+     * @return static
      */
     public function keys()
     {
