@@ -80,6 +80,7 @@ class LazyCollection implements IteratorAggregate
      * @param callable|null $callback
      *
      * @return static
+     * @noinspection PhpUnusedParameterInspection
      */
     public function filter(callable $callback = null)
     {
