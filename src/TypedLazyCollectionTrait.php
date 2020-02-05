@@ -3,6 +3,7 @@
 namespace Tolkam\Collection;
 
 use InvalidArgumentException;
+use RuntimeException;
 
 /**
  * @method __construct($source, $useCache)
@@ -13,9 +14,9 @@ trait TypedLazyCollectionTrait
     /**
      * Gets the allowed items type
      *
-     * @return null|string
+     * @return string
      */
-    abstract public static function itemType(): ?string;
+    abstract public static function itemType(): string;
     
     /**
      * @inheritDoc
@@ -23,9 +24,12 @@ trait TypedLazyCollectionTrait
     public static function create($source, bool $useCache = false)
     {
         $source = static function () use ($source) {
-            $type = static::itemType();
+            if (!$type = static::itemType()) {
+                throw new RuntimeException('Item type must not be empty');
+            }
+            
             foreach (self::resolveGenerator($source) as $k => $v) {
-                if ($type !== null && !self::isTypeValid($v, $type)) {
+                if (!self::isTypeValid($v, $type)) {
                     throw new InvalidArgumentException(sprintf(
                         'Each element of %s must be %s, %s given at "%s" index',
                         addslashes(static::class),
