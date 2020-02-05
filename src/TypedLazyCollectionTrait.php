@@ -2,9 +2,12 @@
 
 namespace Tolkam\Collection;
 
-use Generator;
-use RuntimeException;
+use InvalidArgumentException;
 
+/**
+ * @method __construct($source, $useCache)
+ * @method static resolveGenerator($source) Generator
+ */
 trait TypedLazyCollectionTrait
 {
     /**
@@ -15,28 +18,28 @@ trait TypedLazyCollectionTrait
     abstract public static function itemType(): ?string;
     
     /**
-     * Checks type of each iterator item
-     *
-     * @return Generator
+     * @inheritDoc
      */
-    public function getIterator()
+    public static function create($source, bool $useCache = false)
     {
-        $type = static::itemType();
-        
-        /** @noinspection PhpUndefinedClassInspection */
-        foreach (parent::getIterator() as $k => $item) {
-            if ($type !== null && !$this->isTypeValid($item, $type)) {
-                throw new RuntimeException(sprintf(
-                    'Each element of %s must be %s, %s given at "%s" index',
-                    addslashes(static::class),
-                    $type,
-                    is_object($item) ? get_class($item) : gettype($item),
-                    $k
-                ));
+        $source = static function () use ($source) {
+            $type = static::itemType();
+            foreach (self::resolveGenerator($source) as $k => $v) {
+                if ($type !== null && !self::isTypeValid($v, $type)) {
+                    throw new InvalidArgumentException(sprintf(
+                        'Each element of %s must be %s, %s given at "%s" index',
+                        addslashes(static::class),
+                        $type,
+                        is_object($v) ? get_class($v) : gettype($v),
+                        $k
+                    ));
+                }
+                
+                yield $k => $v;
             }
-            
-            yield $k => $item;
-        }
+        };
+        
+        return new static($source, $useCache);
     }
     
     /**
@@ -47,7 +50,7 @@ trait TypedLazyCollectionTrait
      *
      * @return bool
      */
-    protected function isTypeValid($item, string $type): bool
+    protected static function isTypeValid($item, string $type): bool
     {
         $type = 'boolean' == $type ? 'bool' : $type;
         

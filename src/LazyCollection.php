@@ -35,7 +35,7 @@ class LazyCollection implements IteratorAggregate
      * @param mixed $source
      * @param bool  $useCache Whether to load items into memory on first iteration
      */
-    public function __construct($source, bool $useCache)
+    protected function __construct($source, bool $useCache)
     {
         $this->source = $source;
         $this->useCache = $useCache;
@@ -316,23 +316,23 @@ class LazyCollection implements IteratorAggregate
             return $this->cached;
         }
         
-        $resolved = $this->resolveGenerator($this->source);
+        $resolved = static::resolveGenerator($this->source);
         
         if ($this->useCache) {
-            $this->cached = $resolved = new CachingIterator($resolved);
+            $resolved = $this->cached = new CachingIterator($resolved);
         }
         
         return $resolved;
     }
     
     /**
-     * Creates caching generator from source
+     * Creates generator from mixed source
      *
      * @param $source
      *
      * @return Generator
      */
-    protected function resolveGenerator($source)
+    protected static function resolveGenerator($source)
     {
         $resolved = null;
         
