@@ -3,6 +3,7 @@
 namespace Tolkam\Collection;
 
 use Closure;
+use Countable;
 use Generator;
 use InvalidArgumentException;
 use IteratorAggregate;
@@ -14,7 +15,7 @@ use stdClass;
  * Inspired by Illuminate\Support\LazyCollection
  * @package Tolkam\Collection
  */
-class LazyCollection implements IteratorAggregate
+class LazyCollection implements IteratorAggregate, Countable
 {
     /**
      * @var mixed
@@ -297,7 +298,7 @@ class LazyCollection implements IteratorAggregate
      */
     public function count()
     {
-        return iterator_count($this->getIterator());
+        return $this->isEmpty() ? 0 : iterator_count($this->getIterator());
     }
     
     /**
