@@ -298,7 +298,11 @@ class LazyCollection implements IteratorAggregate, Countable
      */
     public function count()
     {
-        return $this->isEmpty() ? 0 : iterator_count($this->getIterator());
+        $iterator = $this->getIterator();
+        $count = $iterator->valid() ? iterator_count($iterator) : 0;
+        $count && $iterator->rewind();
+        
+        return $count;
     }
     
     /**
