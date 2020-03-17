@@ -282,6 +282,30 @@ class LazyCollection implements IteratorAggregate, Countable
     }
     
     /**
+     * Skip the first N items
+     *
+     * @param $count
+     *
+     * @return static
+     */
+    public function skip(int $count)
+    {
+        return new static(function () use ($count) {
+            $iterator = $this->getIterator();
+            
+            while ($iterator->valid() && $count--) {
+                $iterator->next();
+            }
+            
+            while ($iterator->valid()) {
+                yield $iterator->key() => $iterator->current();
+                
+                $iterator->next();
+            }
+        }, $this->useCache);
+    }
+    
+    /**
      * Loads all items to memory and returns a new collection
      *
      * @return static
