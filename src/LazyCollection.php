@@ -25,28 +25,35 @@ class LazyCollection implements IteratorAggregate, Countable
     /**
      * @var CachingIterator
      */
-    protected $cached;
+    protected ?CachingIterator $cached = null;
     
     /**
      * @var bool
      */
-    protected $useCache;
+    protected bool $useCache = false;
     
     /**
-     * @param mixed $source
-     * @param bool  $useCache Whether to load items into memory on first iteration
+     * @var self|null
      */
-    protected function __construct($source, bool $useCache)
+    protected ?self $previous = null;
+    
+    /**
+     * @param mixed     $source
+     * @param bool      $useCache Whether to load items into memory on first iteration
+     * @param self|null $previous
+     */
+    protected function __construct($source, bool $useCache, self &$previous = null)
     {
         $this->source = $source;
         $this->useCache = $useCache;
+        $this->previous = $previous;
     }
     
     /**
      * Creates new collection
      *
-     * @param      $source
-     * @param bool $useCache
+     * @param       $source
+     * @param bool  $useCache
      *
      * @return static
      */
@@ -97,7 +104,7 @@ class LazyCollection implements IteratorAggregate, Countable
                     yield $key => $value;
                 }
             }
-        }, $this->useCache);
+        }, $this->useCache, $this);
     }
     
     /**
@@ -131,7 +138,7 @@ class LazyCollection implements IteratorAggregate, Countable
             foreach ($this as $key => $value) {
                 yield $key => $callback($value, $key);
             }
-        }, $this->useCache);
+        }, $this->useCache, $this);
     }
     
     /**
@@ -141,7 +148,7 @@ class LazyCollection implements IteratorAggregate, Countable
      */
     public function reverse()
     {
-        return new static(array_reverse($this->toArray(), true), $this->useCache);
+        return new static(array_reverse($this->toArray(), true), $this->useCache, $this);
     }
     
     /**
@@ -163,7 +170,7 @@ class LazyCollection implements IteratorAggregate, Countable
                 
                 yield $resolvedKey => $v;
             }
-        }, $this->useCache);
+        }, $this->useCache, $this);
     }
     
     /**
@@ -185,13 +192,13 @@ class LazyCollection implements IteratorAggregate, Countable
             }
         }
         
-        $groups = new static(static function () use ($grouped, $useCache) {
+        $groups = new static(function () use ($grouped, $useCache) {
             foreach ($grouped as $key => $group) {
-                yield $key => new static($group, $useCache);
+                yield $key => new static($group, $useCache, $this);
             }
-        }, $useCache);
+        }, $useCache, $this);
         
-        return new static($groups, $useCache);
+        return new static($groups, $useCache, $this);
     }
     
     /**
@@ -205,7 +212,7 @@ class LazyCollection implements IteratorAggregate, Countable
             foreach ($this as $key => $value) {
                 yield $key;
             }
-        }, $this->useCache);
+        }, $this->useCache, $this);
     }
     
     /**
@@ -302,7 +309,7 @@ class LazyCollection implements IteratorAggregate, Countable
                 
                 $iterator->next();
             }
-        }, $this->useCache);
+        }, $this->useCache, $this);
     }
     
     /**
@@ -312,7 +319,7 @@ class LazyCollection implements IteratorAggregate, Countable
      */
     public function load()
     {
-        return new static($this->toArray(), $this->useCache);
+        return new static($this->toArray(), $this->useCache, $this);
     }
     
     /**
@@ -346,7 +353,7 @@ class LazyCollection implements IteratorAggregate, Countable
             return $this->cached;
         }
         
-        $resolved = static::resolveGenerator($this->source);
+        $resolved = static::resolveGenerator($this->source, $this);
         
         if ($this->useCache) {
             $resolved = $this->cached = new CachingIterator($resolved);
@@ -358,11 +365,12 @@ class LazyCollection implements IteratorAggregate, Countable
     /**
      * Creates generator from mixed source
      *
-     * @param $source
+     * @param                $source
+     * @param LazyCollection $self
      *
      * @return Generator
      */
-    protected static function resolveGenerator($source)
+    protected static function resolveGenerator($source, self $self)
     {
         $resolved = null;
         
@@ -371,7 +379,7 @@ class LazyCollection implements IteratorAggregate, Countable
         }
         
         if ($source instanceof Closure) {
-            $resolved = $source();
+            $resolved = $source($self);
             if (!($resolved instanceof Generator)) {
                 throw new InvalidArgumentException(sprintf(
                     'Closure must return a %s instance, %s given',

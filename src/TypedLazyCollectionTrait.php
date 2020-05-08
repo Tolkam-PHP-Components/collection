@@ -7,7 +7,7 @@ use RuntimeException;
 
 /**
  * @method __construct($source, $useCache)
- * @method static resolveGenerator($source) Generator
+ * @method static resolveGenerator($source, ...$callableArgs) Generator
  */
 trait TypedLazyCollectionTrait
 {
@@ -23,12 +23,12 @@ trait TypedLazyCollectionTrait
      */
     public static function create($source, bool $useCache = false)
     {
-        $source = static function () use ($source) {
+        $source = static function (self $self) use ($source) {
             if (!$type = static::itemType()) {
                 throw new RuntimeException('Item type must not be empty');
             }
             
-            foreach (self::resolveGenerator($source) as $k => $v) {
+            foreach (self::resolveGenerator($source, $self) as $k => $v) {
                 if (!self::isTypeValid($v, $type)) {
                     throw new InvalidArgumentException(sprintf(
                         'Each element of %s must be %s, %s given at "%s" index',
@@ -63,10 +63,12 @@ trait TypedLazyCollectionTrait
         
         if (function_exists($isFunction) && $isFunction($item)) {
             return true;
-        } else {
+        }
+        else {
             if (function_exists($cTypeFunction) && $cTypeFunction($item)) {
                 return true;
-            } else {
+            }
+            else {
                 if ($item instanceof $type) {
                     return true;
                 }

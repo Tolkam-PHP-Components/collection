@@ -19,22 +19,22 @@ class CachingIterator implements Iterator
     /**
      * @var array
      */
-    private $items = [];
+    private array $items = [];
     
     /**
      * @var Generator
      */
-    private $iterator;
+    private Generator $iterator;
     
     /**
      * @var bool
      */
-    private $iteratorAdvanced = false;
+    private bool $iteratorAdvanced = false;
     
     /**
      * @var bool
      */
-    private $iteratorExhausted = false;
+    private bool $iteratorExhausted = false;
     
     /**
      * Initialize the iterator and stores the first item in the cache. This
