@@ -350,6 +350,8 @@ class LazyCollection implements IteratorAggregate, Countable
     public function getIterator()
     {
         if ($this->cached) {
+            $this->cached->rewind();
+            
             return $this->cached;
         }
         
