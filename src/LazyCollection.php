@@ -314,6 +314,27 @@ class LazyCollection implements IteratorAggregate, Countable
     }
     
     /**
+     * Defers loading until value is requested
+     *
+     * @param Closure $deferred
+     *
+     * @return $this
+     */
+    public function defer(Closure $deferred): self
+    {
+        return new static(function () use ($deferred) {
+            $resolved = $deferred($this) ?? static::empty();
+            
+            if ($resolved instanceof static) {
+                yield from $resolved;
+            }
+            else {
+                yield $resolved;
+            }
+        }, $this->useCache, $this);
+    }
+    
+    /**
      * Loads all items to memory and returns a new collection
      *
      * @return static
