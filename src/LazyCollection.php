@@ -184,15 +184,16 @@ class LazyCollection implements IteratorAggregate, Countable
     {
         $useCache = $this->useCache;
         
-        $grouped = [];
-        foreach ($this as $k => $item) {
-            $key = $keyRetriever($item);
-            if (is_string($key) || is_int($key)) {
-                $grouped[$key][$k] = $item;
+        $groups = new static(function () use ($keyRetriever, $useCache) {
+            
+            $grouped = [];
+            foreach ($this as $k => $item) {
+                $key = $keyRetriever($item);
+                if (is_string($key) || is_int($key)) {
+                    $grouped[$key][$k] = $item;
+                }
             }
-        }
-        
-        $groups = new static(function () use ($grouped, $useCache) {
+            
             foreach ($grouped as $key => $group) {
                 yield $key => new static($group, $useCache, $this);
             }
