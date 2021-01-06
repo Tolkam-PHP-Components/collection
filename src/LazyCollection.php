@@ -129,14 +129,22 @@ class LazyCollection implements IteratorAggregate, Countable
      * Apply a callback over each of the items and use return as value
      *
      * @param callable $callback
+     * @param bool     $recursive
      *
      * @return static
      */
-    public function map(callable $callback)
+    public function map(callable $callback, bool $recursive = false)
     {
-        return new static(function () use ($callback) {
+        return new static(function () use ($callback, $recursive) {
             foreach ($this as $key => $value) {
-                yield $key => $callback($value, $key);
+                if ($recursive && $value instanceof self) {
+                    $value = $value->map($callback);
+                }
+                else {
+                    $value = $callback($value, $key);
+                }
+                
+                yield $key => $value;
             }
         }, $this->useCache, $this);
     }
@@ -359,9 +367,11 @@ class LazyCollection implements IteratorAggregate, Countable
     }
     
     /**
+     * @param callable|null $callback
+     *
      * @return array
      */
-    public function toArray(): array
+    public function toArray(callable $callback = null): array
     {
         $arr = iterator_to_array($this->getIterator(), true);
         
@@ -369,7 +379,8 @@ class LazyCollection implements IteratorAggregate, Countable
             if ($v instanceof self) {
                 $v = $v->toArray();
             }
-            $arr[$k] = $v;
+            
+            $arr[$k] = $callback ? $callback($v) : $v;
         }
         
         return $arr;
