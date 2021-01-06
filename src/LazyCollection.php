@@ -363,7 +363,16 @@ class LazyCollection implements IteratorAggregate, Countable
      */
     public function toArray(): array
     {
-        return iterator_to_array($this->getIterator(), true);
+        $arr = iterator_to_array($this->getIterator(), true);
+        
+        foreach ($arr as $k => $v) {
+            if ($v instanceof self) {
+                $v = $v->toArray();
+            }
+            $arr[$k] = $v;
+        }
+        
+        return $arr;
     }
     
     /**
