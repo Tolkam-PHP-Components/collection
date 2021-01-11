@@ -331,14 +331,7 @@ class LazyCollection implements IteratorAggregate, Countable
     public function defer(Closure $deferred): self
     {
         return new static(function () use ($deferred) {
-            $resolved = $deferred($this) ?? static::empty();
-            
-            if ($resolved instanceof static) {
-                yield from $resolved;
-            }
-            else {
-                yield $resolved;
-            }
+            yield from $deferred($this) ?? static::empty();
         }, $this->useCache, $this);
     }
     
