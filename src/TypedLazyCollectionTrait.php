@@ -19,9 +19,14 @@ trait TypedLazyCollectionTrait
     abstract public static function itemType(): string;
     
     /**
-     * @inheritDoc
+     * Creates new collection
+     *
+     * @param       $source
+     * @param bool  $useCache
+     *
+     * @return static
      */
-    public static function create($source, bool $useCache = false)
+    public static function create($source, bool $useCache = false): self
     {
         $source = static function (self $self) use ($source) {
             if (!$type = static::itemType()) {

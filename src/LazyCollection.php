@@ -23,7 +23,7 @@ class LazyCollection implements IteratorAggregate, Countable
     protected $source;
     
     /**
-     * @var CachingIterator
+     * @var CachingIterator|null
      */
     protected ?CachingIterator $cached = null;
     
@@ -57,7 +57,7 @@ class LazyCollection implements IteratorAggregate, Countable
      *
      * @return static
      */
-    public static function create($source, bool $useCache = false)
+    public static function create($source, bool $useCache = false): self
     {
         return new static($source, $useCache);
     }
@@ -67,7 +67,7 @@ class LazyCollection implements IteratorAggregate, Countable
      *
      * @return static
      */
-    public static function empty()
+    public static function empty(): self
     {
         return static::create([]);
     }
@@ -77,7 +77,7 @@ class LazyCollection implements IteratorAggregate, Countable
      *
      * @return bool
      */
-    public function isEmpty()
+    public function isEmpty(): bool
     {
         return !$this->getIterator()->valid();
     }
@@ -90,7 +90,7 @@ class LazyCollection implements IteratorAggregate, Countable
      * @return static
      * @noinspection PhpUnusedParameterInspection
      */
-    public function filter(callable $callback = null)
+    public function filter(callable $callback = null): self
     {
         if (is_null($callback)) {
             $callback = function ($value, $key) {
@@ -114,7 +114,7 @@ class LazyCollection implements IteratorAggregate, Countable
      *
      * @return static
      */
-    public function each(callable $callback)
+    public function each(callable $callback): self
     {
         foreach ($this as $key => $item) {
             if ($callback($item, $key) === false) {
@@ -133,7 +133,7 @@ class LazyCollection implements IteratorAggregate, Countable
      *
      * @return static
      */
-    public function map(callable $callback, bool $recursive = false)
+    public function map(callable $callback, bool $recursive = false): self
     {
         return new static(function () use ($callback, $recursive) {
             foreach ($this as $key => $value) {
@@ -154,7 +154,7 @@ class LazyCollection implements IteratorAggregate, Countable
      *
      * @return static
      */
-    public function reverse()
+    public function reverse(): self
     {
         return new static(array_reverse($this->toArray(), true), $this->useCache, $this);
     }
@@ -166,7 +166,7 @@ class LazyCollection implements IteratorAggregate, Countable
      *
      * @return static
      */
-    public function keyBy(callable $callback)
+    public function keyBy(callable $callback): self
     {
         return new static(function () use ($callback) {
             foreach ($this as $k => $v) {
@@ -188,7 +188,7 @@ class LazyCollection implements IteratorAggregate, Countable
      *
      * @return static
      */
-    public function groupBy(callable $keyRetriever)
+    public function groupBy(callable $keyRetriever): self
     {
         $useCache = $this->useCache;
         
@@ -215,7 +215,7 @@ class LazyCollection implements IteratorAggregate, Countable
      *
      * @return static
      */
-    public function keys()
+    public function keys(): self
     {
         return new static(function () {
             foreach ($this as $key => $value) {
@@ -300,11 +300,11 @@ class LazyCollection implements IteratorAggregate, Countable
     /**
      * Skip the first N items
      *
-     * @param $count
+     * @param int $count
      *
      * @return static
      */
-    public function skip(int $count)
+    public function skip(int $count): self
     {
         return new static(function () use ($count) {
             $iterator = $this->getIterator();
@@ -326,7 +326,7 @@ class LazyCollection implements IteratorAggregate, Countable
      *
      * @param Closure $deferred
      *
-     * @return $this
+     * @return static
      */
     public function defer(Closure $deferred): self
     {
@@ -340,7 +340,7 @@ class LazyCollection implements IteratorAggregate, Countable
      *
      * @return static
      */
-    public function load()
+    public function load(): self
     {
         return new static($this->toArray(), $this->useCache, $this);
     }
@@ -350,7 +350,7 @@ class LazyCollection implements IteratorAggregate, Countable
      *
      * @return int
      */
-    public function count()
+    public function count(): int
     {
         $iterator = $this->getIterator();
         $count = $iterator->valid() ? iterator_count($iterator) : 0;
@@ -407,7 +407,7 @@ class LazyCollection implements IteratorAggregate, Countable
      *
      * @return Generator
      */
-    protected static function resolveGenerator($source, self $self)
+    protected static function resolveGenerator($source, self $self): Generator
     {
         $resolved = null;
         
@@ -444,7 +444,7 @@ class LazyCollection implements IteratorAggregate, Countable
      *
      * @return Generator
      */
-    protected static function generatorFromIterable(iterable $iterable)
+    protected static function generatorFromIterable(iterable $iterable): Generator
     {
         yield from $iterable;
     }
