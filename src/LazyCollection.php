@@ -370,7 +370,7 @@ class LazyCollection implements IteratorAggregate, Countable
         
         foreach ($arr as $k => $v) {
             if ($v instanceof self) {
-                $v = $v->toArray();
+                $v = $v->toArray($callback);
             }
             
             $arr[$k] = $callback ? $callback($v) : $v;
