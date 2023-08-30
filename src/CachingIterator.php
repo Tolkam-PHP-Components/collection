@@ -64,7 +64,7 @@ class CachingIterator implements Iterator
     /**
      * @inheritDoc
      */
-    public function current()
+    public function current(): mixed
     {
         return current($this->items);
     }
@@ -72,7 +72,7 @@ class CachingIterator implements Iterator
     /**
      * @inheritDoc
      */
-    public function key()
+    public function key(): int|string|null
     {
         return key($this->items);
     }

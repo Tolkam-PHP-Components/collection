@@ -6,6 +6,7 @@ use Closure;
 use Countable;
 use Generator;
 use InvalidArgumentException;
+use Iterator;
 use IteratorAggregate;
 use stdClass;
 
@@ -20,7 +21,7 @@ class LazyCollection implements IteratorAggregate, Countable
     /**
      * @var mixed
      */
-    protected $source;
+    protected mixed $source;
     
     /**
      * @var CachingIterator|null
@@ -42,7 +43,7 @@ class LazyCollection implements IteratorAggregate, Countable
      * @param bool      $useCache Whether to load items into memory on first iteration
      * @param self|null $previous
      */
-    protected function __construct($source, bool $useCache, self &$previous = null)
+    protected function __construct(mixed $source, bool $useCache, self &$previous = null)
     {
         $this->source = $source;
         $this->useCache = $useCache;
@@ -232,7 +233,7 @@ class LazyCollection implements IteratorAggregate, Countable
      *
      * @return mixed|null
      */
-    public function get($key, $default = null)
+    public function get($key, $default = null): mixed
     {
         if (is_null($key)) {
             return $default;
@@ -255,7 +256,7 @@ class LazyCollection implements IteratorAggregate, Countable
      *
      * @return mixed|null
      */
-    public function first(callable $callback = null, $default = null)
+    public function first(callable $callback = null, $default = null): mixed
     {
         $iterator = $this->getIterator();
         
@@ -284,9 +285,9 @@ class LazyCollection implements IteratorAggregate, Countable
      *
      * @return mixed
      */
-    public function last(callable $callback = null, $default = null)
+    public function last(callable $callback = null, $default = null): mixed
     {
-        $found = $nothing = new stdClass;
+        $found = $nothing = new stdClass();
         
         foreach ($this as $key => $value) {
             if (is_null($callback) || $callback($value, $key)) {
@@ -366,7 +367,7 @@ class LazyCollection implements IteratorAggregate, Countable
      */
     public function toArray(callable $callback = null): array
     {
-        $arr = iterator_to_array($this->getIterator(), true);
+        $arr = iterator_to_array($this->getIterator());
         
         foreach ($arr as $k => $v) {
             if ($v instanceof self) {
@@ -382,7 +383,7 @@ class LazyCollection implements IteratorAggregate, Countable
     /**
      * @inheritDoc
      */
-    public function getIterator()
+    public function getIterator(): Iterator
     {
         if ($this->cached) {
             $this->cached->rewind();
